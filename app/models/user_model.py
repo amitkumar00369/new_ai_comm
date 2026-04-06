@@ -1,0 +1,34 @@
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, true,ForeignKey
+from app.models.base_models import BaseMixin
+from core.database import Base
+from datetime import datetime
+from sqlalchemy.orm import relationship
+from ..utils.enum import userType
+
+class User(Base,BaseMixin):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    userId = Column(String, unique=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"),nullable=True)
+    firstName = Column(String,nullable=True)
+    lastName = Column(String, nullable=True)
+    username=Column(String, nullable=True, unique=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)
+    phone_number = Column(String, nullable=True)
+    isEmailVerified = Column(Boolean, default=False)
+    emailExpireAt = Column(DateTime,nullable=True)
+    isPhoneVerified = Column(Boolean, default=False)
+    phoneExpireAt = Column(DateTime,nullable=True)
+    isProfileComplete = Column(Boolean, default=False)
+    description = Column(String, nullable=True)
+    is_active = Column(Boolean, default=False)
+    userType= Column(Enum(userType),default=userType.user,nullable=True)
+    image=Column(String, nullable=True)
+    tenant = relationship("Tenant", back_populates="users")
+    plan_id = Column(Integer, ForeignKey("plans.id"),nullable=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"),nullable=True)
+    refreshToken = Column(String, nullable=True)
+    
+    
+
