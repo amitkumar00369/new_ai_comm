@@ -1,11 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional,Literal
 
-class signupValidation(BaseModel):
-    password: str
-    email: str
-class loginValidation(BaseModel):
-    email: str
-    password: str
+class SignupValidation(BaseModel):
+    phone_number: str
+    country_code: Optional[str] = Field(default="+971")
+class VerifyOtps(BaseModel):
+    type: Literal["email", "phone"]
+    userId: int
+    otp: int
+    
 
 class changePasswordValidation(BaseModel):
     new_password: str

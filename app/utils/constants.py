@@ -1,3 +1,4 @@
+import random
 import uuid
 
 def generateUserId():
@@ -20,4 +21,6 @@ def generateSubscriptionId():
 
 def generateMessageId():
     return str(uuid.uuid4())
+def generateOtp():
+    return random.randint(111111,999999)
 

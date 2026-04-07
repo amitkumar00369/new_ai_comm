@@ -20,10 +20,10 @@ class Payment(Base, BaseMixin):
     transaction_id = Column(String, unique=True)
     payment_method = Column(Enum(paymentMethod),unique=True,default=paymentMethod.card)  # "card" / "upi" / "netbanking"
     userType = Column(Enum(userType),unique=True,default=userType.user)  # "admin" / "user"
-    tenant = relationship("Tenant", back_populates="payments")
-    user = relationship("User", back_populates="payments")  
+    # tenant = relationship("Tenant", back_populates="payments")
+    # user = relationship("User", back_populates="payments")  
     plan_id = Column(Integer, ForeignKey("plans.id"))
-    plan = relationship("Plan", back_populates="payments")
+    # plan = relationship("Plan", back_populates="payments")
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"))
-    subscription = relationship("Subscription", back_populates="payments")
+    # subscription = relationship("Subscription", back_populates="payments")
     

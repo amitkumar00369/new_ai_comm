@@ -18,4 +18,4 @@ class Lead(Base, BaseMixin):
     phone = Column(String, index=True)
     service = Column(String)
     source = Column(Enum(souceType),unique=True)  # "call" / "whatsapp"
-    tenant = relationship("Tenant", back_populates="leads")
+    # tenant = relationship("Tenant", back_populates="leads")

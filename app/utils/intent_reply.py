@@ -154,7 +154,7 @@ def handle_booking(nor_msg, user_number, tenant_number,tenant):
                 data = [p for p in get_properties(tenant["tenant_id"]) if p['price'] == nor_msg.get('price') or p['location'].lower() == nor_msg.get('location').lower()]
             if data:
                 item_id = data[0]['id']
-            lead = create_lead(user_number, nor_msg['entity'], item_id, tenant_number=tenant_number)
+            lead = create_lead(user_number, nor_msg['entity'], item_id, tenant_number=tenant_number, tenant_id=tenant["id"])
             return f"✅ Booking has been confirmed !\nLead: {lead}"
         if nor_msg['entity'] == "salon" and tenant["services_provided"] == "salon":
             data = get_salons(tenant["tenant_id"])

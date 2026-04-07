@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, true,ForeignKey
+from numbers import Number
+
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum,ForeignKey
 from app.models.base_models import BaseMixin
 from core.database import Base
 from datetime import datetime
@@ -16,16 +18,19 @@ class User(Base,BaseMixin):
     email = Column(String, unique=True, index=True)
     password = Column(String)
     phone_number = Column(String, nullable=True)
+    country_code = Column(String, nullable=True,default="+971")
     isEmailVerified = Column(Boolean, default=False)
     emailExpireAt = Column(DateTime,nullable=True)
     isPhoneVerified = Column(Boolean, default=False)
     phoneExpireAt = Column(DateTime,nullable=True)
+    phoneOtp = Column(Integer,nullable=True, default=23456)
+    emailOtp = Column(Integer,nullable=True,default=123456)
     isProfileComplete = Column(Boolean, default=False)
     description = Column(String, nullable=True)
     is_active = Column(Boolean, default=False)
     userType= Column(Enum(userType),default=userType.user,nullable=True)
     image=Column(String, nullable=True)
-    tenant = relationship("Tenant", back_populates="users")
+    # tenant = relationship("Tenant", back_populates="users")
     plan_id = Column(Integer, ForeignKey("plans.id"),nullable=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"),nullable=True)
     refreshToken = Column(String, nullable=True)

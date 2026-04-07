@@ -16,4 +16,4 @@ class Message(Base, BaseMixin):
     sender = Column(Enum(senderType), unique=True)  # "user" / "ai"
     message_text = Column(Text)
 
-    conversation = relationship("Conversation", back_populates="messages")
+    # conversation = relationship("Conversation", back_populates="messages")

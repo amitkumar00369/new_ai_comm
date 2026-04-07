@@ -4,7 +4,14 @@ from app.utils.whatsapp import send_reply
 from app.utils.intent_reply import find_tenant_or_user_by_number
 
 def callback(ch, method, properties, body):
-    data = json.loads(body)
+    data = None
+    
+    if not body:
+        print("⚠️ Empty message received, skipping...")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
+    if body:
+        data = json.loads(body)
 
     user_msg = data.get("body")
     # intent, entity = detect_intent_and_entity(user_msg)

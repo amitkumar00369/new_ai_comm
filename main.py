@@ -1,73 +1,126 @@
-from fastapi import FastAPI
-from fastapi.concurrency import asynccontextmanager
-from core.database import get_db,Base,engine,SessionLocal
-from core.config import settings
-from sqlalchemy import text
-from fastapi import FastAPI,UploadFile
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.params import Depends
 from fastapi.security import HTTPBearer
-from starlette.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from sqlalchemy import text
 import os
-# from src.routes.private import userPrivateRouter
+from app.controllers.image import router as uploadRouter
+
+
+#  Core
+from core.database import Base, engine
+from core.config import settings
+
+#  Middleware
+from app.middleware.logging import LoggingMiddleware
+from app.middleware.ratelimit import RateLimitMiddleware
+from app.middleware.request_id import RequestIDMiddleware
+from app.middleware.responseTime import ResponseTimeMiddleware
+from app.middleware.security import SecurityHeadersMiddleware
+from app.middleware.exception import global_exception_handler
 from app.middleware.auth_middleware import jwt_auth
-# from .routes.common import commonRouter
-# from .routes.route import MlRouter
-# from .config.db import Base,engine
-from app.api.v1.routes_users import userRouter
+
+
+#  Routers
+from app.api.v1.user.api_routes import userRouter
+from app.api.v1.admin.api_routes import adminRouter
 from app.api.v1.routes_whatsapp import whatsappRouter
+from app.api.v1.stripe_routes import stripeRouter
+
+
+# Security
 security = HTTPBearer()
 
-import multiprocessing
-
+# File Upload Config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 
+
+# Lifespan (startup/shutdown)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 App starting...")
-    
-    # ✅ Only for development (not production)
+    print("App starting...")
+
+    #  Only for development
     if settings.ENV == "dev":
         Base.metadata.create_all(bind=engine)
-    
+
     yield
-    print("🛑 App shutting down...")
+
+    print(" App shutting down...")
 
 
-
+# App Init
 app = FastAPI(lifespan=lifespan)
 
-# 📁 Static files
+
+#  Static Files
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-# 🌍 CORS
+
+#  CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ restrict in production
+    allow_origins=["*"],  # restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 📌 Routes
+
+#  Middleware Order (VERY IMPORTANT)
+app.add_middleware(RequestIDMiddleware)                       # 1. Request ID
+app.add_middleware(LoggingMiddleware)                         # 2. Logging
+app.add_middleware(ResponseTimeMiddleware)                    # 3. Response time
+app.add_middleware(SecurityHeadersMiddleware)                 # 4. Security headers
+app.add_middleware(RateLimitMiddleware, max_requests=10, window=60)  # 5. Rate limiting
+
+
+# Global Exception Handler
+app.add_exception_handler(Exception, global_exception_handler)
+
+
+# ===========================
+# PUBLIC ROUTES
+# ===========================
 app.include_router(userRouter, prefix="/api/v1/user", tags=["User-API"])
+app.include_router(adminRouter, prefix="/api/v1/admin", tags=["Admin-API"])
 app.include_router(whatsappRouter, prefix="/api/v1/whatsapp", tags=["WhatsApp-API"])
+app.include_router(stripeRouter, prefix="/api/v1/stripe", tags=["Stripe-API"])
+app.include_router(uploadRouter)
 
 
-# Include routers
-# app.include_router(commonRouter,prefix="/api",tags = ["File-Upload"])
-# app.include_router(MlRouter, prefix="/api/ml", tags=["ML-API"])
-# run.include_router(userRouter, prefix="/api/user", tags=["User-API"])
-# app.include_router(userPrivateRouter, prefix="/api/user/private", tags=["User-Private-API"], dependencies=[Depends(security), Depends(jwt_auth)])
-print(f" server runing on port : http://localhost:{settings.PORT}/docs")
+# ===========================
+# PRIVATE ROUTES
+# ===========================
+app.include_router(
+    userRouter,
+    prefix="/api/v1/user/private",
+    tags=["User-Private-API"],
+    dependencies=[Depends(security), Depends(jwt_auth)]
+)
+
+app.include_router(
+    adminRouter,
+    prefix="/api/v1/admin/private",
+    tags=["Admin-Private-API"],
+    dependencies=[Depends(security), Depends(jwt_auth)]
+)
 
 
+# ===========================
+# HEALTH CHECK
+# ===========================
 @app.get("/health")
 def health_check():
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return {"status": "healthy"}
-    except:
+    except Exception:
         return {"status": "unhealthy"}
+
+
+#  Console log
+print(f"Server running on: http://localhost:{settings.PORT}/docs")

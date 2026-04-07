@@ -9,7 +9,7 @@ def parse_message(message: str):
         intent = "booking"
     elif "price" in msg:
         intent = "price_inquiry"
-    elif "available" in msg or "availability" in msg or "available hai" in msg or "list" in msg or "give" in msg:
+    elif "available" in msg or "availability" in msg or "available hai" in msg or "list" in msg or "give" in msg or "show" in msg:
         print("Intent: Search")
         intent = "search"
     elif "hi" in msg or "hello" in msg or "hey" in msg or "hii" in msg or "great" in msg or "good" in msg or "awesome" in msg or "well" in msg or "okay" in msg:

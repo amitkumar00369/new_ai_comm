@@ -3,31 +3,49 @@ from starlette.concurrency import run_in_threadpool
 from ..services.sessionService import SessionService
 from ..services.user_service import userService
 
+from fastapi import Request, HTTPException
+from starlette.concurrency import run_in_threadpool
+from app.services.sessionService import SessionService
+from app.services.user_service import UserService
+
 
 async def jwt_auth(request: Request):
-    # print(request.headers)
-
     token = request.headers.get("Authorization")
+
     if not token:
-        raise HTTPException(status_code=400, detail="Authorization header missing")
+        raise HTTPException(status_code=401, detail="Authorization header missing")
 
     if not token.startswith("Bearer "):
-        raise HTTPException(status_code=400, detail="Invalid Bearer token format")
+        raise HTTPException(status_code=401, detail="Invalid Bearer token format")
 
     exact_token = token.split(" ")[1]
-    # print(exact_token)
 
-    is_token_exist = await run_in_threadpool(SessionService.getSessionData, exact_token)
-    if is_token_exist is None:
-        raise HTTPException(status_code=404, detail="Token not found")
+    # ✅ Check token exists in DB
+    session = await run_in_threadpool(
+        SessionService.getSessionData,
+        exact_token
+    )
 
-    decoded = SessionService.decodeSession(exact_token)
-    if not decoded:
-        raise HTTPException(status_code=401, detail="Unauthorized token")
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    user = await run_in_threadpool(userService.findById, decoded)
-    if user is None:
+    # ✅ Decode token
+    try:
+        decoded = SessionService.decodeSession(exact_token)
+        print(decoded)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    # ✅ Get user
+    user = await run_in_threadpool(
+        UserService.findById,
+        decoded
+    )
+
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # ✅ Attach user to request
     request.state.user = user
+
     return user

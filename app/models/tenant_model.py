@@ -1,5 +1,5 @@
-from click.core import F
-from sqlalchemy import Column, ForeignKey, Integer, String, false
+
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from app.models import payment
 from app.models.base_models import BaseMixin
@@ -13,10 +13,10 @@ class Tenant(Base, BaseMixin):
     business_name = Column(String, nullable=False)
     plan_id = Column(Integer, ForeignKey("plans.id"))
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"))
-    users = relationship("User", back_populates="tenant")
-    conversations = relationship("Conversation", back_populates="tenant")
-    leads = relationship("Lead", back_populates="tenant")
-    call_logs = relationship("CallLog", back_populates="tenant")
-    users= relationship("User", back_populates="tenant")
-    subscription = relationship("Subscription", back_populates="tenant", uselist=False)
-    payments = relationship("Payment", back_populates="tenant")
+    # users = relationship("User", back_populates="tenant")
+    # conversations = relationship("Conversation", back_populates="tenant")
+    # leads = relationship("Lead", back_populates="tenant")
+    # call_logs = relationship("CallLog", back_populates="tenant")
+    # users= relationship("User", back_populates="tenant")
+    # subscription = relationship("Subscription", back_populates="tenant", uselist=False)
+    # payments = relationship("Payment", back_populates="tenant")

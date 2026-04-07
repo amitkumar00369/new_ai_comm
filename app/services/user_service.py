@@ -31,7 +31,7 @@ class userService:
     @staticmethod
     def getUserByEmail(email: str):
         db: Session = SessionLocal()
-        return jsonable_encoder(db.query(User).filter(User.email == email).first())
+        return jsonable_encoder(db.query(User).filter(User.email == email and User.isEmailVerified==True).first())
 
     @staticmethod
     def findByIdUpdate(userId: int, payload: dict):
@@ -54,6 +54,15 @@ class userService:
             return jsonable_encoder(user)
         except Exception as e:
             print(e)
+    @staticmethod
+    def findByNumber(phone_number: str) :
+        db: Session = SessionLocal()
+        try:
+            user = db.query(User).filter(User.phone_number == phone_number).first()
+            return jsonable_encoder(user)
+        except Exception as e:
+            print(e)
+        
 
 
 

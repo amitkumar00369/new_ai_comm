@@ -11,6 +11,7 @@ class sessionModel(Base,BaseMixin):
     userId = Column(Integer, ForeignKey("users.id"))
     userType= Column(Enum(userType),  default=userType.user)
     email = Column(String, default="")
+    phone_number =  Column(String, default="")
     createdAt = Column(DateTime, default=datetime.utcnow)  # auto insert
     updatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # auto update
     accessToken = Column(String, default="")

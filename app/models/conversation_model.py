@@ -17,5 +17,5 @@ class Conversation(Base, BaseMixin):
     customer_phone = Column(String, index=True)
     source = Column(Enum(souceType),unique=True)  # "whatsapp" / "call"
 
-    tenant = relationship("Tenant", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation")
+    # tenant = relationship("Tenant", back_populates="conversations")
+    # messages = relationship("Message", back_populates="conversation")

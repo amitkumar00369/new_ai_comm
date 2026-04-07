@@ -10,7 +10,6 @@ class RoomType(str, Enum):
 class userType(str, Enum):
     user="user"
     admin="admin"
-    subAdmin="subAdmin"
 
 class bookingType(str,Enum):
     pending = "0"
