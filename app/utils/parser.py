@@ -4,10 +4,11 @@ def parse_message(message: str):
     msg = message.lower()
     print("Parsing message:", msg)
 
-    # 🔥 Intent
+    #  Intent
     if "book" in msg or "appointment" in msg:
         intent = "booking"
-    elif "price" in msg:
+    elif "price" in msg or "charge" in msg:
+        print("yes")
         intent = "price_inquiry"
     elif "available" in msg or "availability" in msg or "available hai" in msg or "list" in msg or "give" in msg or "show" in msg:
         print("Intent: Search")
@@ -17,7 +18,7 @@ def parse_message(message: str):
     else:
         intent = "unknown"
 
-    # 🔥 Entity
+    #  Entity
     if "salon" in msg or "haircut" in msg:
         entity = "salon"
     elif "bhk" in msg or "flat" in msg:

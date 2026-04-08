@@ -1,14 +1,17 @@
 from fastapi import FastAPI, Request
 # import pika
 # import json
+from fastapi.concurrency import run_in_threadpool
 import requests
 # import os
 from core.config import settings
 app = FastAPI()
-from rabbitmq_queue import publish_to_queue
+from rabbitmq_queue import RabbitMQClient
+from fastapi.concurrency import run_in_threadpool
 from app.utils.whatsapp import send_reply
 
-
+def publish_async(message_data):
+    RabbitMQClient.publish(message_data)
 
 # ✅ Webhook API (Twilio → FastAPI)
 async def whatsapp_webhook(request: Request):
@@ -44,7 +47,7 @@ async def whatsapp_webhook(request: Request):
         "numMedia": form_data.get("NumMedia")
     }
 
-    publish_to_queue(message_data)
+    await run_in_threadpool(publish_async,message_data)
 
     print("Queued:", message_data)
 
