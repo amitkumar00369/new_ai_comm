@@ -16,5 +16,14 @@ class changePasswordValidation(BaseModel):
 class changeEmail(BaseModel):
     old_email: str
     new_email: str
+    
+class editProfileSchema(BaseModel):
+    email: Optional["str"]
+    phone_number: Optional["str"]
+    country_code: Optional[str] = Field(default="+971")
+    firstName: Optional["str"]
+    lastName: Optional["str"]
+    image: Optional["str"]
+    dob: Optional["str"]
 
 

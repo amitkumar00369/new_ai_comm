@@ -11,7 +11,7 @@ from ...services.passwordService import PasswordService
 from app.services.sessionService import SessionService
 from ...services.user_service import UserService
 from app.utils.enum import userType
-from app.schemas.user_schema import SignupValidation,VerifyOtps
+from app.schemas.user_schema import SignupValidation,VerifyOtps,editProfileSchema
 
 
 
@@ -93,6 +93,9 @@ async def verifyOtp(data:VerifyOtps ):
             return JSONResponse(content={
                 "message": "Otp invailid","data": [], "status": 400
             },status_code=400)
+        payload = {
+        "isEmailVerified": True,
+        "emailVerify": True }
         return JSONResponse(content={
             "message": "Otp verify successfully","data": [], "status": 200
         },status_code=200)
@@ -107,7 +110,8 @@ async def verifyOtp(data:VerifyOtps ):
             },status_code=400)
     payload = {
         "is_active":True,
-        "isPhoneVerified": True
+        "isPhoneVerified": True,
+        "phoneVerify": True
 
     }
     tokenPayload = {
@@ -138,11 +142,44 @@ async def verifyOtp(data:VerifyOtps ):
     updateData['refreshToken'] = refreshToken
     return JSONResponse(status_code=status.HTTP_200_OK, content=updateData)
 
-async def editProfile(user = Depends(jwt_auth)):
+async def editProfile(data: editProfileSchema, currentUser = Depends(jwt_auth)):
     try:
-        print("user",user)
+        payload = jsonable_encoder(data)
+        update = {}
+        otp = await run_in_threadpool(generateOtp)
+        if payload["email"]:
+            user = await run_in_threadpool(UserService.getUserByEmail, payload["email"])
+            if user and  user["id"]!=currentUser["id"]:
+                return JSONResponse(content={
+                    "message":  "Email exist already",
+                    "status": 400
+                },status_code=400)
+
+            update = {
+                "email": payload["email"],
+                "emailExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "emailOtp": otp,
+                "isEmailVerified": False
+            }
+        
+        elif payload["phone_number"]:
+            user = await run_in_threadpool(UserService.findByNumber, payload["phone_number"])
+            if user and  user["id"]!=currentUser["id"]:
+                return JSONResponse(content={
+                    "message":  "Phone number exist already",
+                    "status": 400
+                },status_code=400)
+            update = {
+                "phone_number": payload["email"],
+                "phoneExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "phoneOtp": otp,
+                "isPhoneVerified": False
+            }
+        else:
+            update =payload
+        userData = await run_in_threadpool(UserService.findByIdUpdate, currentUser["id"], update)
         return JSONResponse(content={
-            "message": "success","data": user,"status": 200
+            "message": "success","data": userData,"status": 200
         },status_code=200)
     except Exception as e:
         return JSONResponse(content={

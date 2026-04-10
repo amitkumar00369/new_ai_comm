@@ -19,7 +19,7 @@ from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.responseTime import ResponseTimeMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.exception import global_exception_handler
-from app.middleware.auth_middleware import jwt_auth
+from app.middleware.auth_middleware import jwt_auth,jwt_auth_admin
 
 
 #  Routers
@@ -105,7 +105,7 @@ app.include_router(
     adminRouter,
     prefix="/api/v1/admin/private",
     tags=["Admin-Private-API"],
-    dependencies=[Depends(security), Depends(jwt_auth)]
+    dependencies=[Depends(security), Depends(jwt_auth_admin)]
 )
 
 

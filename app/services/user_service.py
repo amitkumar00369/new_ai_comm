@@ -62,7 +62,15 @@ class userService:
             return jsonable_encoder(user)
         except Exception as e:
             print(e)
-        
+    @staticmethod
+    def getList() :
+        db: Session = SessionLocal()
+        try:
+            user = db.query(User).filter(User.isDeleted ==False).all(orderBy="created_at")
+            return jsonable_encoder(user)
+        except Exception as e:
+            print(e)
+
 
 
 

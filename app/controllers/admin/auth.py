@@ -93,7 +93,7 @@ async def login(data: createAdmin):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": str(e)}
         )
-            
+
             
                     
 
