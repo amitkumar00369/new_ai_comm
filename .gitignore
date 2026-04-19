@@ -1,7 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
 
-/__pycache__
-/alembic
-/alembic.ini
-/fastenv
-To deploy the Cloud Function, the Firebase project needs to be upgraded from Spark to Blaze plan.
-/.env
+# Virtual Env
+fastenv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# Database (if local)
+*.sqlite3
+
+# Alembic cache
+alembic/__pycache__/
+
+# Temp files
+*.tmp
+*.swp

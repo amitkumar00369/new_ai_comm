@@ -11,8 +11,9 @@ from ...services.passwordService import PasswordService
 from app.services.sessionService import SessionService
 from ...services.user_service import UserService
 from app.utils.enum import userType
-from app.schemas.user_schema import SignupValidation,VerifyOtps,editProfileSchema
-
+from app.schemas.user_schema import SignupValidation,VerifyOtps,editProfileSchema,ResentOtp
+from app.utils.response_data import success_response,error_response
+from app.utils.message import HttpStatusCode,SuccessMessage, ErrorMessage
 
 
 from fastapi.concurrency import run_in_threadpool
@@ -69,78 +70,122 @@ async def create_user(data: SignupValidation):
             content={"message": str(e)}
         )
 
-
+async def login(data:SignupValidation):
+    try:
+        data = jsonable_encoder(data)
+        user = await run_in_threadpool(UserService.getUser,data.get("phone_number"))
+        print("usususuuu",user)
+        if user is None:
+            return JSONResponse(content={
+                "message":"User not exist",
+                "status": 400,
+                
+            },status_code=400)
+        if user.get("isBlocked"):
+            return JSONResponse(content={
+                "message":"You have been blocked, please conatact to our support",
+                "status": 403,
+                
+            },status_code=403)
+            
+        otp = await run_in_threadpool(generateOtp)
+        payload = {
+            "phoneExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "phoneOtp": otp,
+                "isPhoneVerified": False
+                }
+        await run_in_threadpool(UserService.findByIdUpdate,user.get("id"),payload)
+                
+        return JSONResponse(
+            content={
+                "message": "Otp sent successfully",
+                "otp": otp,
+                "status": 200
+            },status_code=200
+        )
+    except Exception as e:
+        return JSONResponse(content={
+            "message":str(e)
+        },status_code=500)
+        
 
 async def verifyOtp(data:VerifyOtps ):
-    payload = jsonable_encoder(data)
-    user = await run_in_threadpool(UserService.findById, payload["userId"] )
-    expire_time = datetime.fromisoformat(user['phoneExpireAt'])
-
-    print("user",user)
-    currentTime = datetime.now()
-    print("currentTime", currentTime)
-    if user is None:
-        return JSONResponse(content={
-            "message": "User not found","data": [], "status": 404
-        },status_code=404)
+    try:
         
-    elif payload["type"]=="email":
-        if expire_time<=currentTime:
+        payload = jsonable_encoder(data)
+        user = await run_in_threadpool(UserService.findById, payload["userId"] )
+        expire_time = datetime.fromisoformat(user['phoneExpireAt'])
+
+        print("user",user)
+        currentTime = datetime.now()
+        print("currentTime", currentTime)
+        if user is None:
             return JSONResponse(content={
-                "message": "Otp expired","data": [], "status": 403
-            },status_code=403)
-        if user['emailOtp']!=payload["otp"] and payload["otp"]!=123456 :
+                "message": "User not found","data": [], "status": 404
+            },status_code=404)
+            
+        elif payload["type"]=="email":
+            if expire_time<=currentTime:
+                return JSONResponse(content={
+                    "message": "Otp expired","data": [], "status": 403
+                },status_code=403)
+            if user['emailOtp']!=payload["otp"] and payload["otp"]!=123456 :
+                return JSONResponse(content={
+                    "message": "Otp invailid","data": [], "status": 400
+                },status_code=400)
+            payload = {
+            "isEmailVerified": True,
+            "emailVerify": True }
             return JSONResponse(content={
-                "message": "Otp invailid","data": [], "status": 400
-            },status_code=400)
+                "message": "Otp verify successfully","data": [], "status": 200
+            },status_code=200)
+        elif payload["type"]=="phone":
+            if expire_time<=currentTime:
+                return JSONResponse(content={
+                    "message": "Otp expired","data": [], "status": 403
+                },status_code=403)
+            if user['phoneOtp']!=payload["otp"] and payload["otp"]!=123456 :
+                return JSONResponse(content={
+                    "message": "Otp invailid","data": [], "status": 400
+                },status_code=400)
         payload = {
-        "isEmailVerified": True,
-        "emailVerify": True }
+            "is_active":True,
+            "isPhoneVerified": True,
+            "phoneVerify": True
+
+        }
+        tokenPayload = {
+            "userId": user["id"],
+        }
+        token = await run_in_threadpool(SessionService.createSession, tokenPayload)
+        # print(token)
+        if not token:
+            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED)
+        refreshToken = await run_in_threadpool(SessionService.createRefreshSession, tokenPayload)
+        # print(refreshToken)
+        sessionData = {
+            "userId":user["id"],
+            # "email":user["email"],
+            "phone_number":user["phone_number"],
+            "userType": userType.user,
+            "accessToken": token,
+            "deviceId": "android",
+            "deviceToken": "xva98hjd82gd892v8dnjs8ub37vdu2ug8y93hd8",
+            "deviceTypeId": "abc12345"
+        }
+        # print("dashDB",sessionData)
+        await run_in_threadpool(SessionService.createSessionData, sessionData)
+        payload [ "refreshToken"] = refreshToken
+
+        updateData = await run_in_threadpool(UserService.findByIdUpdate, user['id'],payload)
+        updateData['accessToken'] = token
+        updateData['refreshToken'] = refreshToken
+        return JSONResponse(status_code=status.HTTP_200_OK, content=updateData)
+    except Exception as e:
         return JSONResponse(content={
-            "message": "Otp verify successfully","data": [], "status": 200
-        },status_code=200)
-    elif payload["type"]=="phone":
-        if expire_time<=currentTime:
-            return JSONResponse(content={
-                "message": "Otp expired","data": [], "status": 403
-            },status_code=403)
-        if user['phoneOtp']!=payload["otp"] and payload["otp"]!=123456 :
-            return JSONResponse(content={
-                "message": "Otp invailid","data": [], "status": 400
-            },status_code=400)
-    payload = {
-        "is_active":True,
-        "isPhoneVerified": True,
-        "phoneVerify": True
-
-    }
-    tokenPayload = {
-        "userId": user["id"],
-    }
-    token = await run_in_threadpool(SessionService.createSession, tokenPayload)
-    # print(token)
-    if not token:
-        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED)
-    refreshToken = await run_in_threadpool(SessionService.createRefreshSession, tokenPayload)
-    # print(refreshToken)
-    sessionData = {
-        "userId":user["id"],
-        # "email":user["email"],
-        "phone_number":user["phone_number"],
-        "userType": userType.user,
-        "accessToken": token,
-        "deviceId": "android",
-        "deviceToken": "xva98hjd82gd892v8dnjs8ub37vdu2ug8y93hd8",
-        "deviceTypeId": "abc12345"
-    }
-    # print("dashDB",sessionData)
-    await run_in_threadpool(SessionService.createSessionData, sessionData)
-    payload [ "refreshToken"] = refreshToken
-
-    updateData = await run_in_threadpool(UserService.findByIdUpdate, user['id'],payload)
-    updateData['accessToken'] = token
-    updateData['refreshToken'] = refreshToken
-    return JSONResponse(status_code=status.HTTP_200_OK, content=updateData)
+            "message":str(e)
+        },status_code=500)
+    
 
 async def editProfile(data: editProfileSchema, currentUser = Depends(jwt_auth)):
     try:
@@ -170,7 +215,7 @@ async def editProfile(data: editProfileSchema, currentUser = Depends(jwt_auth)):
                     "status": 400
                 },status_code=400)
             update = {
-                "phone_number": payload["email"],
+                "phone_number": payload["phone_number"],
                 "phoneExpireAt":  datetime.now()+ timedelta(minutes=2),
                 "phoneOtp": otp,
                 "isPhoneVerified": False
@@ -185,47 +230,59 @@ async def editProfile(data: editProfileSchema, currentUser = Depends(jwt_auth)):
         return JSONResponse(content={
             "message":str(e)
         },status_code=500)
+async def resentOtp(data:ResentOtp):
+    try:
+        payload = jsonable_encoder(data)
+        user = await run_in_threadpool(UserService.findById, payload.get("userId"))
+        otp = await run_in_threadpool(generateOtp)
+        update = {}
+        if payload.get("type")=="email":
+            update = {
+                "emailExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "emailOtp": otp,
+                "isEmailVerified": False
+            }
+            
+        elif payload.get("type")=="phone":
+            update = {
+                "phoneExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "phoneOtp": otp,
+                "isPhoneVerified": False
+            }
+        else:
+            return await run_in_threadpool(error_response,ErrorMessage.BAD_REQUEST,HttpStatusCode.BAD_REQUEST)
+            
+        await run_in_threadpool(UserService.findByIdUpdate,user.get("id"), update)
+        resData = {
+            "otp": update["phoneOtp"] or update['emailOtp']
+        }
         
-# async def some_api(request: Request):
-#     user = request.state.user
-#     pass
-# async def get_user(request: Request):
-
-#     return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "ok","data": request.state.user,"status":status.HTTP_200_OK})
-
-# async def changePassword(request: Request,data: changePasswordValidation):
-#     try:
-#         payload = jsonable_encoder(data)
-#         user = request.state.user
-#         print("user....................",user)
-#         verifyPassword = PasswordService.verifyPassword(payload['old_password'], user['password'])
-#         if not verifyPassword:
-#             return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"message": "password is wrong"})
-#         updatePayload = {
-#             "password": PasswordService.createPassword(payload["new_password"])
-#         }
-#         await run_in_threadpool(SessionService.deleteSessionByUserId,user['id'] )
-#         updateUser = await run_in_threadpool(UserService.findByIdUpdate, user['id'], updatePayload)
-#         return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "ok","status":status.HTTP_200_OK})
-#     except Exception as e:
-#         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)})
-
-# async def changeEmailAddress(request: Request, data: changeEmail):
-#     try:
-#         payload = jsonable_encoder(data)
-#         user = request.state.user
-#         if user['email'] != payload['email']:
-#             return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": "email is wrong"})
-#         if '@' not in payload['email'] or '.' not in payload['email']:
-#             return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"message": "Invalid email"})
-#         updatePayload = {
-#             "email": payload['email'],
-#         }
-#         updateUser = await run_in_threadpool(UserService.findByIdUpdate, user['id'], updatePayload)
-#         return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "ok", "status": status.HTTP_200_OK})
-
-#     except Exception as e:
-#         return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": str(e)})
-
-
-
+        # delete all session of active user
+        
+        return await run_in_threadpool(success_response, SuccessMessage.UPDATED,resData,HttpStatusCode.OK)
+    except Exception as e:
+        return await run_in_threadpool(error_response,ErrorMessage.SERVER_ERROR,HttpStatusCode.INTERNAL_SERVER_ERROR)
+async def logout(currentUser = Depends(jwt_auth)):
+    try:
+        # delete all session of active user
+        print(currentUser,"djjdjjfjfjfnfnjfjf jfbjf")
+        await run_in_threadpool(SessionService.deleteSessionByUserId, currentUser.get("id"))
+        return await run_in_threadpool(success_response, SuccessMessage.LOGOUT,[],HttpStatusCode.OK)
+    except Exception as e:
+        return await run_in_threadpool(error_response,ErrorMessage.SERVER_ERROR,HttpStatusCode.INTERNAL_SERVER_ERROR)
+async def deleteAccount(currentUser= Depends(jwt_auth)):
+    try:
+        #update fields like isDeleted
+        update = {
+            "isDeleted": True
+        }
+        await run_in_threadpool(UserService.findByIdUpdate,currentUser.get("id"), update)
+        # delete all session of active user
+        await run_in_threadpool(SessionService.deleteSessionByUserId, currentUser.get("id"))
+        return await run_in_threadpool(success_response, SuccessMessage.DELETED,[],HttpStatusCode.OK)
+    except Exception as e:
+        return await run_in_threadpool(error_response,ErrorMessage.SERVER_ERROR,HttpStatusCode.INTERNAL_SERVER_ERROR)
+        
+        
+    
+        

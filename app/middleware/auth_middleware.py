@@ -4,7 +4,7 @@ from starlette.concurrency import run_in_threadpool
 from app.utils.enum import userType
 from ..services.sessionService import SessionService
 from ..services.user_service import userService
-
+from fastapi.responses import JSONResponse
 from fastapi import Request, HTTPException
 from starlette.concurrency import run_in_threadpool
 from app.services.sessionService import SessionService
@@ -34,7 +34,7 @@ async def jwt_auth(request: Request):
     # ✅ Decode token
     try:
         decoded = SessionService.decodeSession(exact_token)
-        print(decoded)
+        print("dhbfhb",decoded)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -43,6 +43,7 @@ async def jwt_auth(request: Request):
         UserService.findById,
         decoded
     )
+    print("users",user)
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -58,10 +59,10 @@ async def jwt_auth_admin(request: Request):
     token = request.headers.get("Authorization")
 
     if not token:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
+        return JSONResponse(status_code=401, content={"message":"Authorization header missing"})
 
     if not token.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid Bearer token format")
+        return JSONResponse(status_code=401,content={"message":"Invalid Bearer token format"})
 
     exact_token = token.split(" ")[1]
 
@@ -72,14 +73,14 @@ async def jwt_auth_admin(request: Request):
     )
 
     if not session:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        return JSONResponse(status_code=401,content={"message":"Invalid or expired token"})
 
     # ✅ Decode token
     try:
         decoded = SessionService.decodeSession(exact_token)
         print(decoded)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        return  JSONResponse(status_code=401,content={"message":"Invalid token"})
 
     # ✅ Get user
     user = await run_in_threadpool(
@@ -87,13 +88,15 @@ async def jwt_auth_admin(request: Request):
         decoded
     )
     if user["userType"]!=userType.admin:
-        raise HTTPException(status_code=404, detail="You are not admin")
+        return JSONResponse(status_code=404, content={"message":"You are not admin"})
         
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return JSONResponse(status_code=404, content={"message":"user not found"})
 
     # ✅ Attach user to request
     request.state.user = user
+
+    
 
     return user

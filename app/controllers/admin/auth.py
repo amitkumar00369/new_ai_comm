@@ -4,12 +4,11 @@ from app.services.user_service import UserService
 from app.schemas.adminSchemas import createAdmin
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from fastapi.concurrency import run_in_threadpool
 from starlette import status
-
+from fastapi.concurrency import run_in_threadpool
+from fastapi import Depends,Request
+from app.middleware.auth_middleware import jwt_auth,jwt_auth_admin
 from app.utils.enum import userType
-
-
 
 async def create(data: createAdmin):
     try:
@@ -24,6 +23,7 @@ async def create(data: createAdmin):
 async def login(data: createAdmin):
     try:
         payload = jsonable_encoder(data)
+        print("parrr",payload)
 
         #  Find user
         admin = await run_in_threadpool(
@@ -88,6 +88,41 @@ async def login(data: createAdmin):
             content={"message": "login successfull", "token": token, "status": 200}
         )
 
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)}
+        )
+async def editProfile(data: dict, admin = Depends(jwt_auth_admin)):
+    
+    try:
+        payload = jsonable_encoder(data)
+        updateData = {
+            "firstName": payload["fistName"],
+            "lastName": payload["lastName"]
+        }
+        adminData = await run_in_threadpool(UserService.findByIdUpdate, admin.id, updateData)
+        return JSONResponse(content={
+            "message": "Profile updated successfully",
+            "data": adminData,
+            "status": 200
+        })
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": str(e)}
+        )
+async def logout(request: Request,admin=Depends(jwt_auth_admin)):
+    try:
+        token = request.headers.get("Authorization")
+        exact_token = token.split(" ")[1]
+        await run_in_threadpool(SessionService.deleteSession, exact_token)
+        return JSONResponse(
+            content={
+                "message": "logout successfully",
+                "status": 200
+            }
+        )
     except Exception as e:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

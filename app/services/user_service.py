@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from ..models.user_model import User
 from core.database import SessionLocal
 from fastapi.encoders import jsonable_encoder
+from app.utils.enum import userType
+
 
 class userService:
 
@@ -21,22 +23,27 @@ class userService:
             db.close()
 
     @staticmethod
-    def getMlModel():
+    def getUser(phone_number):
         db: Session = SessionLocal()
         try:
-            results = db.query(User).order_by(User.id.asc()).all()
+            results = db.query(User).filter(User.phone_number == phone_number,
+                                     User.isDeleted==False,
+                                     User.phoneVerify==True).first()
             return jsonable_encoder(results)
         finally:
             db.close()
+            
     @staticmethod
     def getUserByEmail(email: str):
         db: Session = SessionLocal()
-        return jsonable_encoder(db.query(User).filter(User.email == email and User.isEmailVerified==True).first())
+        return jsonable_encoder(db.query(User).filter(User.email == email).first())
 
     @staticmethod
     def findByIdUpdate(userId: int, payload: dict):
         db: Session = SessionLocal()
-        user = db.query(User).filter(User.id == userId).first()
+        user = db.query(User).filter(User.id == userId,
+                                     User.isDeleted==False
+                                     ).first()
         if not user:
             return None  # or raise HTTPException
 
@@ -46,32 +53,43 @@ class userService:
         db.commit()
         db.refresh(user)
         return jsonable_encoder(user)
+    
     @staticmethod
     def findById(userId: int):
         db: Session = SessionLocal()
         try:
-            user = db.query(User).filter(User.id == userId).first()
+            user = db.query(User).filter(User.id == userId,
+                                         User.isDeleted==False).first()
             return jsonable_encoder(user)
         except Exception as e:
             print(e)
+            
     @staticmethod
     def findByNumber(phone_number: str) :
         db: Session = SessionLocal()
         try:
-            user = db.query(User).filter(User.phone_number == phone_number).first()
+            user = db.query(User).filter(
+                                        User.phone_number == phone_number,
+                                        User.isDeleted == False
+                                        ).first()
             return jsonable_encoder(user)
         except Exception as e:
             print(e)
+            
+            
     @staticmethod
-    def getList() :
+    def getList():
         db: Session = SessionLocal()
         try:
-            user = db.query(User).filter(User.isDeleted ==False).all(orderBy="created_at")
+            user = (
+            db.query(User)
+            .filter(User.isDeleted == False,
+                    User.userType!=userType.admin)
+            .order_by(User.created_at)   #  correct
+            .all())
             return jsonable_encoder(user)
         except Exception as e:
             print(e)
-
-
 
 
 UserService = userService()

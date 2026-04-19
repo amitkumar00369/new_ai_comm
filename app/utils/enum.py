@@ -45,7 +45,7 @@ class paymentMethod(str,Enum):
     netbanking = "2"
     
 class periodType(str,Enum):
-    default = "0"
+    default = "0"  #24 hours plan will active
     monthly = "1"      # for one month  
     quaterly = "2"      # for three month
     yearly = "3"   # for one year
@@ -69,3 +69,5 @@ class bussinesType(str,Enum):
     manufacturing = "7"
     transportation = "8"
     entertainment = "9"
+    restaurants = "10"
+    salon="11"
