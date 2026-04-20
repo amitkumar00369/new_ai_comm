@@ -6,7 +6,6 @@ from sqlalchemy import null
 from starlette import status
 
 from app.middleware.auth_middleware import jwt_auth
-from app.services.stripe_service import StripeService
 
 from ...services.passwordService import PasswordService
 from app.services.sessionService import SessionService
@@ -109,7 +108,43 @@ async def login(data:SignupValidation):
             "message":str(e)
         },status_code=500)
         
-
+async def login(data:SignupValidation):
+    try:
+        data = jsonable_encoder(data)
+        user = await run_in_threadpool(UserService.getUser,data.get("phone_number"))
+        print("usususuuu",user)
+        if user is None:
+            return JSONResponse(content={
+                "message":"User not exist",
+                "status": 400,
+                
+            },status_code=400)
+        if user.get("isBlocked"):
+            return JSONResponse(content={
+                "message":"You have been blocked, please conatact to our support",
+                "status": 403,
+                
+            },status_code=403)
+            
+        otp = await run_in_threadpool(generateOtp)
+        payload = {
+            "phoneExpireAt":  datetime.now()+ timedelta(minutes=2),
+                "phoneOtp": otp,
+                "isPhoneVerified": False
+                }
+        await run_in_threadpool(UserService.findByIdUpdate,user.get("id"),payload)
+                
+        return JSONResponse(
+            content={
+                "message": "Otp sent successfully",
+                "otp": otp,
+                "status": 200
+            },status_code=200
+        )
+    except Exception as e:
+        return JSONResponse(content={
+            "message":str(e)
+        },status_code=500)
 async def verifyOtp(data:VerifyOtps ):
     try:
         
@@ -177,10 +212,10 @@ async def verifyOtp(data:VerifyOtps ):
         # print("dashDB",sessionData)
         await run_in_threadpool(SessionService.createSessionData, sessionData)
         payload [ "refreshToken"] = refreshToken
+
         updateData = await run_in_threadpool(UserService.findByIdUpdate, user['id'],payload)
         updateData['accessToken'] = token
         updateData['refreshToken'] = refreshToken
-    
         return JSONResponse(status_code=status.HTTP_200_OK, content=updateData)
     except Exception as e:
         return JSONResponse(content={

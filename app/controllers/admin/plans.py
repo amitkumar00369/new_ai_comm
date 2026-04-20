@@ -57,31 +57,42 @@ async def updatePlan(data: PlanUpdate,admin = Depends(jwt_auth_admin)):
             payloadData["isDeleted"] = True
             message = "Plan has been deleted successfully"
             
-        elif payload.get("type")=="1":   # update profile
+        elif payload.get("type") == "1":  # update profile
+    
             if payload.get("name"):
                 
-                isPlanExist = await run_in_threadpool(PlanService.findByName,payload.get("name"))
-                
-                if  isPlanExist is None:
-                    print("idididi",isPlanExist)
-                    payloadData["name"] = payload.get("name")
-                    
-                    
-                if  isPlanExist.get("name")==payload["name"] :
-                    # print("yes1")
+                isPlanExist = await run_in_threadpool(
+                    PlanService.findByName,
+                    payload.get("name")
+                )
+
+                # Case 1: No plan found → safe to update
+                if isPlanExist is None:
                     payloadData["name"] = payload.get("name")
 
-                if isPlanExist.get("id")!=payload["id"]:
-                    return JSONResponse(content={
-                        "message":"Plan already exist",
-                        "status": 400
-                    },status_code=400)
-            print("asdfgh",payloadData)
-            
+                else:
+                    # Case 2: Same plan (same ID) → allow
+                    if isPlanExist.get("id") == payload.get("id"):
+                        payloadData["name"] = payload.get("name")
+
+                    # Case 3: Different plan with same name → reject
+                    else:
+                        return JSONResponse(
+                            content={
+                                "message": "Plan already exist",
+                                "status": 400
+                            },
+                            status_code=400
+                        )
+
+            print("asdfgh", payloadData)
+
             payloadData["planType"] = payload.get("planType")
             payloadData["period"] = payload.get("period")
             payloadData["price"] = payload.get("price")
+
             print("payload", payloadData)
+
             message = "Plan updated successfully"
         else:
             return JSONResponse(content={

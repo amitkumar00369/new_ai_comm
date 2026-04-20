@@ -24,3 +24,7 @@ def generateMessageId():
 def generateOtp():
     return random.randint(111111,999999)
 
+def generateAgentId(name):
+    return name + str(random.randint(1111,9999))
+    
+

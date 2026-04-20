@@ -9,7 +9,7 @@ class Agents(Base,BaseMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     agentId = Column(String)
-    agentWhatsappNumbe = Column(String, unique=True)
+    agentWhatsappNumber = Column(String, unique=True)
     countryCode = Column(String)
     isAssigned = Column(Boolean,default=False)
     assignedBy = Column(Integer, ForeignKey("users.id"))
