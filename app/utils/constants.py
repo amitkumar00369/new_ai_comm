@@ -14,10 +14,10 @@ def generateCallId():
     return str(uuid.uuid4())
 
 def generatePlanId():
-    return str(uuid.uuid4())
+    return "plan"+ str(random.randint(11111,99999))
 
 def generateSubscriptionId():
-    return str(uuid.uuid4())
+    return "subs"+ str(random.randint(11111,99999))
 
 def generateMessageId():
     return str(uuid.uuid4())

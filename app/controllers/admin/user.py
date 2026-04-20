@@ -38,11 +38,11 @@ async def blockUnblocked(id: int,admin = Depends(jwt_auth_admin) ):
                 "status": 404
             },status_code=404)
         message = ""
-        if user.isBlocked:
-            await run_in_threadpool(UserService.findByIdUpdate,{"isBlocked": False})
+        if user.get("isBlocked"):
+            await run_in_threadpool(UserService.findByIdUpdate,id,{"isBlocked": False})
             message = "User has been blocked"
         else:
-            await run_in_threadpool(UserService.findByIdUpdate,{"isBlocked": True})
+            await run_in_threadpool(UserService.findByIdUpdate,id,{"isBlocked": True})
             message = "User has been Unblocked"
         return JSONResponse(content={
             "message":message,

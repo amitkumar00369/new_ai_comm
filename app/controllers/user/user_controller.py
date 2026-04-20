@@ -6,6 +6,7 @@ from sqlalchemy import null
 from starlette import status
 
 from app.middleware.auth_middleware import jwt_auth
+from app.services.stripe_service import StripeService
 
 from ...services.passwordService import PasswordService
 from app.services.sessionService import SessionService
@@ -176,10 +177,10 @@ async def verifyOtp(data:VerifyOtps ):
         # print("dashDB",sessionData)
         await run_in_threadpool(SessionService.createSessionData, sessionData)
         payload [ "refreshToken"] = refreshToken
-
         updateData = await run_in_threadpool(UserService.findByIdUpdate, user['id'],payload)
         updateData['accessToken'] = token
         updateData['refreshToken'] = refreshToken
+    
         return JSONResponse(status_code=status.HTTP_200_OK, content=updateData)
     except Exception as e:
         return JSONResponse(content={

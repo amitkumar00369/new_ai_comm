@@ -59,10 +59,10 @@ async def jwt_auth_admin(request: Request):
     token = request.headers.get("Authorization")
 
     if not token:
-        return JSONResponse(status_code=401, content={"message":"Authorization header missing"})
+       raise HTTPException(status_code=401, detail="Authorization header missing")
 
     if not token.startswith("Bearer "):
-        return JSONResponse(status_code=401,content={"message":"Invalid Bearer token format"})
+        raise HTTPException(status_code=401, detail="Invalid Bearer token format")
 
     exact_token = token.split(" ")[1]
 
@@ -73,14 +73,14 @@ async def jwt_auth_admin(request: Request):
     )
 
     if not session:
-        return JSONResponse(status_code=401,content={"message":"Invalid or expired token"})
+       raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     # ✅ Decode token
     try:
         decoded = SessionService.decodeSession(exact_token)
         print(decoded)
     except Exception:
-        return  JSONResponse(status_code=401,content={"message":"Invalid token"})
+       raise HTTPException(status_code=401, detail="Invalid token")
 
     # ✅ Get user
     user = await run_in_threadpool(
@@ -88,11 +88,11 @@ async def jwt_auth_admin(request: Request):
         decoded
     )
     if user["userType"]!=userType.admin:
-        return JSONResponse(status_code=404, content={"message":"You are not admin"})
+        raise HTTPException(status_code=400, detail="You are not allow to access")
         
-
+    print("usersssssss",user)
     if not user:
-        return JSONResponse(status_code=404, content={"message":"user not found"})
+       raise HTTPException(status_code=404, detail="User not found")
 
     # ✅ Attach user to request
     request.state.user = user

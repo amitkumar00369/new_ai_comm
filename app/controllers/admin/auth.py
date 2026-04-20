@@ -98,10 +98,11 @@ async def editProfile(data: dict, admin = Depends(jwt_auth_admin)):
     try:
         payload = jsonable_encoder(data)
         updateData = {
-            "firstName": payload["fistName"],
-            "lastName": payload["lastName"]
+            "firstName": payload["firstName"],
+            "lastName": payload["lastName"],
+            "image": payload["image"]
         }
-        adminData = await run_in_threadpool(UserService.findByIdUpdate, admin.id, updateData)
+        adminData = await run_in_threadpool(UserService.findByIdUpdate, admin.get("id"), updateData)
         return JSONResponse(content={
             "message": "Profile updated successfully",
             "data": adminData,
