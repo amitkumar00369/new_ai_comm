@@ -43,7 +43,7 @@ class bussinessService:
             valid = []
             duplicates = []
 
-            # ✅ Step 2: split valid & duplicate
+            # Step 2: split valid & duplicate
             for item in data:
                 title = item.get("title")
 
@@ -55,7 +55,7 @@ class bussinessService:
                 else:
                     valid.append(item)
 
-            # ✅ Step 3: bulk insert valid data
+            # Step 3: bulk insert valid data
             if valid:
                 db.bulk_insert_mappings(BussinessServiceModel, valid)
                 db.commit()

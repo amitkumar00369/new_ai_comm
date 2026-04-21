@@ -132,11 +132,12 @@ async def login(data:SignupValidation):
                 "phoneOtp": otp,
                 "isPhoneVerified": False
                 }
-        await run_in_threadpool(UserService.findByIdUpdate,user.get("id"),payload)
+        userData = await run_in_threadpool(UserService.findByIdUpdate,user.get("id"),payload)
                 
         return JSONResponse(
             content={
                 "message": "Otp sent successfully",
+                "data": userData,
                 "otp": otp,
                 "status": 200
             },status_code=200

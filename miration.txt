@@ -164,3 +164,8 @@ alembic upgrade head
 uvicorn main:app --host 0.0.0.0 --port 4000
  uvicorn main:app --reload --port 4000 
  DELETE FROM alembic_version;
+
+ activate rabbitmq
+cd "C:\Program Files\RabbitMQ Server\rabbitmq_server-4.2.5\sbin"
+.\rabbitmq-plugins enable rabbitmq_management
+h p://localhost:15672   guest/guest
