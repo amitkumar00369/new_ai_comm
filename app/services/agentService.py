@@ -1,12 +1,18 @@
 import stat
 
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
+
+
+from app.utils.pagination import PaginationRsponse
 # from stripe import PlanService
 from ..models.agentModel import Agents
+from ..models.plan import Plan
+
 from core.database import SessionLocal
 from fastapi.encoders import jsonable_encoder
 from app.utils.enum import userType
-
+from app.models.user_model import User
 class agentService:
     
     @staticmethod
@@ -80,12 +86,50 @@ class agentService:
     
     
     @staticmethod
-    def getList():
+    def getList(find: None, option= {"page": 1, "limit": 10}):
         db: Session = SessionLocal()
         try:
-            agents = (db.query(Agents).filter(Agents.isDeleted==False).order_by(Agents.created_at)).all()
-            return jsonable_encoder(agents)
+            agents = (db.query(Agents,Plan, User).join(Plan, Agents.plan_id==Plan.id).outerjoin(User, Agents.assignedBy == User.id).filter(Agents.isDeleted==False).order_by(desc(Agents.created_at))).all()
+            data = []
+            print("agenst",agents)
+            for agent, plan, user in agents:   # 3 values unpack karo
+                if user is None:
+                    data.append({
+                    "agent": jsonable_encoder(agent),
+                    "plan": jsonable_encoder(plan),
+                    "assignedBy": { }
+                })
+                else:
+                    
+                    
+                    data.append({
+                        "agent": jsonable_encoder(agent),
+                        "plan": jsonable_encoder(plan),
+                        "assignedBy": {
+                            "id": user.id,
+                            # "name": user.name,
+                            "phone": user.phone_number
+                        }
+                    })
+            return PaginationRsponse.returnData(data,option)
         except Exception as e:
             print(e)
+    @staticmethod
+    def getListByUser(find: None, option= {"page": 1, "limit": 10}):
+        db: Session = SessionLocal()
+        try:
+            agents = (db.query(Agents,Plan).join(Plan, Agents.plan_id==Plan.id).filter(Agents.isDeleted==False,
+                                              Agents.isBlocked==False,
+                                              Agents.isAssigned==False).order_by(desc(Agents.created_at))).all()
+            data = []
+            for agent, plan in agents:
+                data.append({
+                    "agent": jsonable_encoder(agent),
+                    "plan": jsonable_encoder(plan)
+                })
+            return PaginationRsponse.returnData(data,option)
+        except Exception as e:
+            print(e)
+    
 
 AgentService = agentService()

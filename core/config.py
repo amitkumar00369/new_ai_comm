@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     SALT: str
     SQLITE:  str
     ENV: str
+    SECRET_KEY: str
+    ALGORITHM: str   # ✅ add this
+    ACCESS_TOKEN_EXPIRE_MINUTES: int  # ✅ add this
+    ACCESS_TOKEN_EXPIRE_DAYS: int     # ✅ add this
     TWILIO_ACCOUNT_SID: str
     TWILIO_AUTH_TOKEN: str
     TWILIO_PHONE_NUMBER: str

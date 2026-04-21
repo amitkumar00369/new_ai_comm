@@ -11,6 +11,7 @@ class CreateAgent(BaseModel):
         default="+971",
         pattern=r"^\+\d{1,4}$"
     )
+    plan_id: int
     
 class AgentUpdate(BaseModel):
     id: int
@@ -22,4 +23,8 @@ class AgentUpdate(BaseModel):
 
     name: Optional[str] = None
     image: Optional[str] = None
+    plan_id: Optional[int] = None
+    
+
+    
 

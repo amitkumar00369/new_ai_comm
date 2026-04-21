@@ -1,0 +1,52 @@
+[
+  {
+    "title": "General Checkup",
+    "price": 500,
+    "location": "Delhi",
+    "doctorType": "General",
+    "experience": 5,
+    "hospitalName": "Apollo Clinic",
+    "availableDays": "Mon-Fri",
+    "timing": "10AM-5PM"
+  },
+  {
+    "title": "Dental Cleaning",
+    "price": 800,
+    "location": "Noida",
+    "doctorType": "Dentist",
+    "experience": 8,
+    "hospitalName": "Smile Care",
+    "availableDays": "Mon-Sat",
+    "timing": "11AM-7PM"
+  },
+  {
+    "title": "Eye Consultation",
+    "price": 600,
+    "location": "Gurgaon",
+    "doctorType": "Ophthalmologist",
+    "experience": 6,
+    "hospitalName": "Vision Plus",
+    "availableDays": "Tue-Sun",
+    "timing": "9AM-4PM"
+  },
+  {
+    "title": "Skin Treatment hoga",
+    "price": 1200,
+    "location": "Delhi",
+    "doctorType": "Dermatologist",
+    "experience": 10,
+    "hospitalName": "SkinCare Center",
+    "availableDays": "Mon-Fri",
+    "timing": "12PM-6PM"
+  },
+  {
+    "title": "Child Specialist",
+    "price": 700,
+    "location": "Noida",
+    "doctorType": "Pediatrician",
+    "experience": 7,
+    "hospitalName": "Kids Health",
+    "availableDays": "Mon-Sat",
+    "timing": "10AM-3PM"
+  }
+]

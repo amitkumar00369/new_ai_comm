@@ -1,9 +1,12 @@
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
+
+from app.models.user_model import User
 from ..models.tenant_model import Tenant
 from core.database import SessionLocal
 from fastapi.encoders import jsonable_encoder
 from app.utils.enum import userType
-
+from app.utils.pagination import PaginationRsponse
 class tenantService:
 
     @staticmethod
@@ -56,16 +59,29 @@ class tenantService:
         except Exception as e:
             print(e)
     @staticmethod
-    def getList() :
+    def getList(find=None, option= {"page": 1, "limit": 10}) :
         db: Session = SessionLocal()
         try:
-            tenat = (
-            db.query(Tenant)
-            .filter(Tenant.isDeleted == False and Tenant.userType!=userType.admin)
-            .order_by(Tenant.created_at)   # ✅ correct
-            .all()
-        )
-            return jsonable_encoder(tenat)
+            result = (
+                db.query(Tenant,User)   #  select both tables
+                .join(User, Tenant.user_id == User.id)   #  JOIN condition
+                .filter(Tenant.isDeleted == False)
+                .order_by(desc(Tenant.created_at))
+                .all()
+            )
+
+            # Convert into clean JSON format
+            data = []
+            for tenant, user in result:
+                data.append({
+                    "tenant": jsonable_encoder(tenant),
+                    "user": {
+                        "id": user.id,
+                        "phone_number": user.phone_number
+                    }
+                })
+
+            return PaginationRsponse.returnData(data,option)
         except Exception as e:
             print(e)
 

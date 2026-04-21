@@ -3,6 +3,7 @@ from app.controllers.admin.auth import create,login,editProfile,logout
 from app.controllers.admin.user import getUserList,blockUnblocked,deleleUser
 from app.controllers.admin.plans import createPlan,updatePlan,getPlans,getPlansDetails
 from app.controllers.admin.agents import createAgent,updateAgent,getAgents,getAgentDetails
+from app.controllers.user.tenant_controller import getTenants
 
 adminRouter:APIRouter= APIRouter()
 
@@ -29,8 +30,11 @@ adminRouter.get("/getPlansDetails/{id}")(getPlansDetails)
 # Create agent
 adminRouter.post("/create-agent")(createAgent)
 adminRouter.patch("/updateAgent")(updateAgent)
-adminRouter.get("/getAgents")(getAgents)
+adminRouter.post("/getAgents")(getAgents)
 adminRouter.get("/getAgentDetails/{id}")(getAgentDetails)
+
+# tenats
+adminRouter.get("/getTenats")(getTenants)
 
 
 

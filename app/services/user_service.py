@@ -1,4 +1,7 @@
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
+
+from app.utils.pagination import PaginationRsponse
 from ..models.user_model import User
 from core.database import SessionLocal
 from fastapi.encoders import jsonable_encoder
@@ -78,16 +81,17 @@ class userService:
             
             
     @staticmethod
-    def getList():
+    def getList(find=None, option = {"page": 1, "limit": 10}):
         db: Session = SessionLocal()
         try:
             user = (
             db.query(User)
             .filter(User.isDeleted == False,
                     User.userType!=userType.admin)
-            .order_by(User.created_at)   #  correct
+            .order_by(desc(User.created_at))   #  correct
             .all())
-            return jsonable_encoder(user)
+            data = jsonable_encoder(user)
+            return PaginationRsponse.returnData(data,option)
         except Exception as e:
             print(e)
 

@@ -2,6 +2,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from starlette import status
 from fastapi import Depends,Request
+from app.services.plan_service import PlanService
 from app.middleware.auth_middleware import jwt_auth,jwt_auth_admin
 from app.utils.enum import userType
 from app.schemas.agentSchema import CreateAgent,AgentUpdate
@@ -13,6 +14,12 @@ from app.utils.constants import generateAgentId
 async def createAgent(data: CreateAgent, admin = Depends(jwt_auth_admin)):
     try:
         payload = jsonable_encoder(data)
+        isPlanActive = await run_in_threadpool(PlanService.findById, payload.get("plan_id"))
+        if isPlanActive is None:
+            return JSONResponse(content={
+                "message": "Plan not active",
+                "'status": 400
+            },status_code=400)
         findAgentWithThisNumber = await run_in_threadpool(AgentService.findByNumber,payload["phone_number"])
         if findAgentWithThisNumber:
             return JSONResponse(content={
@@ -32,7 +39,8 @@ async def createAgent(data: CreateAgent, admin = Depends(jwt_auth_admin)):
             "agentWhatsappNumber": payload["phone_number"],
             "agentId": await run_in_threadpool(generateAgentId, payload["name"]),
             "name":  payload["name"],
-            "countryCode": payload["country_code"]
+            "countryCode": payload["country_code"],
+            "plan_id": payload.get("plan_id")
             
         }
         agent = await run_in_threadpool(AgentService.create, createPayload)
@@ -103,6 +111,16 @@ async def updateAgent(data: AgentUpdate,admin = Depends(jwt_auth_admin)):
                         )
 
             # print("asdfgh", payloadData)
+            if payload.get("plan_id"):
+                isPlanActive = await run_in_threadpool(PlanService.findById, payload.get("plan_id"))
+                if isPlanActive is None:
+                    return JSONResponse(content={
+                        "message": "Plan not active",
+                        "'status": 400
+                    },status_code=400)
+                
+                                                    
+                payloadData["plan_id"] =  payload.get("plan_id")
 
         
 
@@ -128,9 +146,33 @@ async def updateAgent(data: AgentUpdate,admin = Depends(jwt_auth_admin)):
             "status": 500
         },status_code=500)
         
-async def getAgents(admin = Depends(jwt_auth_admin)):
+async def getAgents(data: dict, request: Request,admin = Depends(jwt_auth_admin)):
     try:
-        agents = await run_in_threadpool(AgentService.getList)
+        query = {
+            "page": int(request.query_params.get("page", 1)),
+            "limit": int(request.query_params.get("limit",10))
+        }
+        payload = jsonable_encoder(data)
+        agents = await run_in_threadpool(AgentService.getList,payload,query)
+        return JSONResponse(content={
+            "message": "success",
+            "data": agents or [],
+            "status":  200
+        },status_code=200)
+    except Exception as e:
+        return JSONResponse(content={
+            "message": "Internal server error",
+            "err": str(e),
+            "status": 500
+        },status_code=500)
+async def getAgentsByUsers(data: dict,request: Request,admin = Depends(jwt_auth)):
+    try:
+        query = {
+            "page": int(request.query_params.get("page", 1)),
+            "limit": int(request.query_params.get("limit",10))
+        }
+        payload = jsonable_encoder(data)
+        agents = await run_in_threadpool(AgentService.getListByUser,payload,query)
         return JSONResponse(content={
             "message": "success",
             "data": agents or [],
@@ -156,3 +198,39 @@ async def getAgentDetails(id: int,admin = Depends(jwt_auth_admin)):
             "err": str(e),
             "status": 500
         },status_code=500)
+        
+async def assignAgents(id, user = Depends(jwt_auth)):
+    try:
+        agent = await run_in_threadpool(AgentService.findById, id)
+        if agent.get("isAssigned"):
+            return JSONResponse(content={
+                "message": "Agent already assinged",
+                "status": 400
+            },status_code=400)
+        if agent.get("isBlocked"):
+            return JSONResponse(content={
+                "message": "Agent has blocked",
+                "status": 400
+            },status_code=400)
+        if agent.get("isDeleted"):
+            return JSONResponse(content={
+                "message": "Agent has deleted",
+                "status": 400
+            },status_code=400)
+        updateData = {
+            "assignedBy": user.get("id"),
+            "isAssigned" : True
+        }
+        agentData = await run_in_threadpool(AgentService.agentUpgrade,agent.get("id"), updateData)
+        return JSONResponse(content={
+            "message": "success",
+            "data": agentData or [],
+            "status":  200
+        },status_code=200)
+    except Exception as e:
+        return JSONResponse(content={
+            "message": "Internal server error",
+            "err": str(e),
+            "status": 500
+        },status_code=500)
+        

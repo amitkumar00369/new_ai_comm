@@ -84,7 +84,7 @@ async def updatePlan(data: PlanUpdate,admin = Depends(jwt_auth_admin)):
                             },
                             status_code=400
                         )
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
             print("asdfgh", payloadData)
 
             payloadData["planType"] = payload.get("planType")
@@ -113,9 +113,14 @@ async def updatePlan(data: PlanUpdate,admin = Depends(jwt_auth_admin)):
             "status": 500
         },status_code=500)
         
-async def getPlans(admin = Depends(jwt_auth_admin)):
+async def getPlans(data: dict, request: Request,admin = Depends(jwt_auth_admin)):
     try:
-        plans = await run_in_threadpool(PlanService.getList)
+        query = {
+            "page": int(request.query_params.get("page", 1)),
+            "limit": int(request.query_params.get("limit",10))
+        }
+        payload = jsonable_encoder(data)
+        plans = await run_in_threadpool(PlanService.getList,payload,query)
         return JSONResponse(content={
             "message": "success",
             "data": plans or [],

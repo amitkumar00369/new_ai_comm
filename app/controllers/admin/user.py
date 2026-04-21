@@ -13,9 +13,14 @@ from starlette import status
 from app.utils.enum import userType
 
 
-async def getUserList(admin = Depends(jwt_auth_admin)):
+async def getUserList(data: dict, request: Request,admin = Depends(jwt_auth_admin)):
     try:
-        users = await run_in_threadpool(UserService.getList)
+        query = {
+            "page": int(request.query_params.get("page", 1)),
+            "limit": int(request.query_params.get("limit",10))
+        }
+        payload = jsonable_encoder(data)
+        users = await run_in_threadpool(UserService.getList,payload,query)
         return JSONResponse(content={
             "message": "user list",
             "data": users,

@@ -1,7 +1,11 @@
 import stat
 
+from fastapi.concurrency import run_in_threadpool
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from stripe import PlanService
+
+from app.utils.pagination import PaginationRsponse
 from ..models.plan import Plan
 from core.database import SessionLocal
 from fastapi.encoders import jsonable_encoder
@@ -68,11 +72,14 @@ class planService:
     
     
     @staticmethod
-    def getList():
+    def getList(find=None, option = {"page": 1,"limit": 10}):
         db: Session = SessionLocal()
         try:
-            plans = (db.query(Plan).filter(Plan.isDeleted==False).order_by(Plan.created_at)).all()
-            return jsonable_encoder(plans)
+            plans = (db.query(Plan).filter(Plan.isDeleted==False).order_by(desc(Plan.created_at))).all()
+            data= jsonable_encoder(plans)
+            return PaginationRsponse.returnData(data, option)
+        
+        
         except Exception as e:
             print(e)
     
