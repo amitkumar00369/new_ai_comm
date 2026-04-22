@@ -4,6 +4,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 
+from app.models.tenant_model import Tenant
 from app.utils.pagination import PaginationRsponse
 # from stripe import PlanService
 from ..models.agentModel import Agents
@@ -66,6 +67,37 @@ class agentService:
             agent = db.query(Agents).filter(Agents.agentWhatsappNumber==number,
                                          Agents.isDeleted==False).first()
             return jsonable_encoder(agent)
+        except Exception as e:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+    @staticmethod
+    def findByNumberWithUserDetails(number: str):
+        db: Session = SessionLocal()
+        try:
+            agent = (
+                db.query(Agents, User, Tenant)
+                .join(User, Agents.assignedBy == User.id)
+                .join(Tenant, User.id == Tenant.user_id)  #  Tenant join
+                .filter(
+                    Agents.agentWhatsappNumber == number,
+                    Agents.isDeleted == False
+                )
+                .first()
+            )
+
+            if agent:
+                agent_data, user_data, tenant_data = agent
+
+                return jsonable_encoder({
+                    "agent": agent_data,
+                    "user": user_data,
+                    "tenant": tenant_data
+                })
+
+            return None
+
         except Exception as e:
             db.rollback()
             raise

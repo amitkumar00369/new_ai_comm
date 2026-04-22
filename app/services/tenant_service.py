@@ -58,6 +58,7 @@ class tenantService:
             return jsonable_encoder(tenat)
         except Exception as e:
             print(e)
+    
     @staticmethod
     def getList(find=None, option= {"page": 1, "limit": 10}) :
         db: Session = SessionLocal()

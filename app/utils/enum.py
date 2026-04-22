@@ -71,3 +71,65 @@ class bussinesType(str,Enum):
     entertainment = "9"
     restaurants = "10"
     salon="11"
+    
+entity_keywords = {
+    # "it_services": [
+    #     "software", "website", "app", "development", "coding", "it", "tech",
+    #     "api", "backend", "frontend", "bug", "server"
+    # ],
+
+    "healthcare": [
+        "doctor", "clinic", "hospital", "medicine", "appointment",
+        "health", "checkup", "treatment", "dawai", "ilaj", "aspatal"
+    ],
+
+    "education": [
+        "school", "college", "course", "class", "teacher", "coaching",
+        "training", "study", "exam", "tuition", "subject"
+    ],
+
+    # "finance": [
+    #     "loan", "bank", "finance", "money", "investment", "emi",
+    #     "insurance", "credit", "debit", "tax", "payment"
+    # ],
+
+    # "retail": [
+    #     "shop", "store", "buy", "product", "price", "mall",
+    #     "purchase", "order", "item", "sale"
+    # ],
+
+    "real_estate": [
+        "bhk", "flat", "apartment", "plot", "property", "rent",
+        "buy house", "sell house", "villa", "land"
+    ],
+
+    # "hospitality": [
+    #     "hotel", "room", "stay", "booking", "resort",
+    #     "guest house", "checkin", "checkout"
+    # ],
+
+    "manufacturing": [
+        "factory", "manufacturing", "production", "machine",
+        "industrial", "assembly", "plant"
+    ],
+
+    # "transportation": [
+    #     "transport", "truck", "bus", "car", "delivery",
+    #     "logistics", "shipment", "travel", "ride"
+    # ],
+
+    "entertainment": [
+        "movie", "cinema", "music", "game", "show",
+        "concert", "fun", "event", "ticket"
+    ],
+
+    # "restaurants": [
+    #     "food", "restaurant", "menu", "order food", "eat",
+    #     "dinner", "lunch", "breakfast", "cafe", "dish"
+    # ],
+
+    "salon": [
+        "salon", "haircut", "spa", "beauty", "makeup",
+        "facial", "grooming", "parlor"
+    ]
+}
