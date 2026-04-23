@@ -14,8 +14,8 @@ def get_last_message(session_id):
     session = get_session(session_id)
 
 
-    if not session or not session.get("messages"):
+    if not session:
         return None
-    print("sesssss shivam", session)
+    # print("sesssss shivam", session)
 
-    return session["messages"][-1]   # 👈 last message
+    return session.get("last_intent")  # 👈 last message

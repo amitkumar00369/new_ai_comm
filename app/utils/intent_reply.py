@@ -38,6 +38,9 @@ def find_tenant_or_user_by_number(user_msg, tenant_number=None, sender_number=No
     agentDatas = agentData.get("agent")
     ownerDatas = agentData.get("user")
     tenantDatas = agentData.get("tenant")
+    # print("agentDatas",agentDatas)
+    # print("ownerDatas",ownerDatas)  
+    # print("tenantDatas",tenantDatas)
 
     #  GET SESSION
     session = get_session(session_id) or {
@@ -62,8 +65,11 @@ def find_tenant_or_user_by_number(user_msg, tenant_number=None, sender_number=No
     else:
         # HANDLE NORMAL USER FLOW
         lastMessage = get_last_message(session_id)
-        print(lastMessage)
-        reply = handle_message(user_msg, sender_number, ownerDatas, tenantDatas, agentDatas)
+        print("lastMessage", lastMessage)
+        if lastMessage is not None:
+            reply = handle_message(user_msg, sender_number, ownerDatas, tenantDatas, agentDatas,lastIntent=lastMessage )
+        else:
+            reply = handle_message(user_msg, sender_number, ownerDatas, tenantDatas, agentDatas,lastIntent=None)
 
     #  ADD BOT REPLY
     session["messages"].append({
@@ -107,14 +113,14 @@ def format_list(data, entity):
     numbers = []   # 👈 dynamic numbers collect karne ke liye
 
     for i, item in enumerate(data, 1):
-        msg += f"""{i}️⃣ {item['title']}
+        msg += f"""{item["id"]}️⃣ {item['title']}
 📍 {item['location']} | 💰 ₹{item['price']}
 
 """
         mapping[str(i)] = item["id"]
-        numbers.append(str(i))   # 👈 collect numbers
+        numbers.append(str(item["id"]))   # 👈 collect numbers
 
-    # 🔥 dynamic join
+    #  dynamic join
     number_text = " / ".join(numbers)
 
     msg += f"""👉 Reply *{number_text}* to book  
@@ -126,7 +132,7 @@ def format_list(data, entity):
 
 
 # 🔥 MAIN FUNCTION (THIS WAS MISSING)
-def handle_message(user_msg, user_number,ownerData,tenantData,agentData):
+def handle_message(user_msg, user_number,ownerData,tenantData,agentData,lastIntent=None):
     # print(tenantData,agentData,ownerData)
     serviceType = tenantData.get("business_name")
     bussinessName = bussinesType(tenantData.get("business_name")).name
@@ -146,59 +152,17 @@ def handle_message(user_msg, user_number,ownerData,tenantData,agentData):
         return f"Hello 👋! How can I help you? I am {agentData.get('name')}: {bussinessName} service provider"
 
     #  SEARCH FLOW
-    if intent == "search":
+    if intent == "search" and lastIntent!="search":
+        print("Search intent detected")
         # supose user has sent message give me list then i knew that from whict tenant number we message while 
         # currenly using property provider then we reply message with greeting this is ur service list
-        if  entity == "general" and serviceType== bussinesType.real_estate:
-            data = BussinessService.findByUserId(ownerData["id"])
-
-            return format_list(data, serviceType)
-        if entity == bussinessName  and serviceType== bussinesType.real_estate:
-            data = []
-            if nor_msg['location'] is not None:
-                data = [p for p in BussinessService.findByUserId(ownerData["id"]) if p['location'].lower() == nor_msg['location'].lower()]
-            else:
+        if entity == "general" and nor_msg.get("serviceId") is None :
                 data = BussinessService.findByUserId(ownerData["id"])
-            return format_list(data, serviceType)
-        if entity == "general" and serviceType== bussinesType.healthcare:
-            print("yessss ")
-            data = BussinessService.findByUserId(ownerData["id"])
-            # print("wrong here",data)
-            return format_list(data, serviceType)
-        if entity == bussinessName and  serviceType== bussinesType.healthcare:
-            data = []
-            if nor_msg['location'] is not None:
-                data = [p for p in BussinessService.findByUserId(ownerData["id"]) if p['location'].lower() == nor_msg['location'].lower()]
-            else:
-                data = BussinessService.findByUserId(ownerData["id"])
-            return format_list(data, serviceType)
-        if  entity == "general" and serviceType== bussinesType.salon:
-            data = BussinessService.findByUserId(ownerData["id"])
-
-            return format_list(data, serviceType)
-
-        elif entity == bussinessName and serviceType== bussinesType.salon:
-            data = []
-            
-            if nor_msg['service'] is not None:
-                data = [s for s in BussinessService.findByUserId(ownerData["id"]) if s['service'].lower() == nor_msg['service'].lower()]
-            else:
-                data = BussinessService.findByUserId(ownerData["id"])
-            return format_list(data, serviceType)
-
-        elif entity == bussinessName and  entity == "general" and serviceType== bussinesType.entertainment:
-            data = []
-            if nor_msg['location'] is not None:
-                data = [e for e in BussinessService.findByUserId(ownerData["id"])  if e['location'].lower() == nor_msg['location'].lower()]
-            else: 
-                data =BussinessService.findByUserId(ownerData["id"])
-            # data = get_events()
-            return format_list(data, serviceType)
-
+                return format_list(data, serviceType)
         else:
             return f" 😊 I m provider {agentData['name']} and i provide {bussinessName} services"
 
-    # 🟢 PRICE
+    #  PRICE
     if intent == "price_inquiry":
             data = []
             if nor_msg['location'] is not None and nor_msg['price'] is not None :
@@ -213,69 +177,48 @@ def handle_message(user_msg, user_number,ownerData,tenantData,agentData):
                 msg = format_list(data,serviceType)
                 # min_price = min([p['price'] for p in data])
                 return f" Here are services\n: {msg}"
-       
-       
-    if intent == "booking":
-     
-        return handle_booking(nor_msg, user_number, agentData,ownerData,tenantData)
+    if intent == "unknown" and lastIntent=="search":
+      print("lastIntent", lastIntent)
+      return handle_booking(nor_msg, user_number, agentData,ownerData,tenantData,lastIntent)
+    if intent == "booking" or (intent == "unknown" and lastIntent=="booking") :
+        return handle_booking(nor_msg, user_number, agentData,ownerData,tenantData,lastIntent)
         
 
     #  BOOKING
-def handle_booking(nor_msg, user_number, agentData,ownerData,tenantData):
+def handle_booking(nor_msg, user_number, agentData,ownerData,tenantData,lastIntent=None):
         serviceType = tenantData.get("business_name")
         bussinessName = bussinesType(tenantData.get("business_name")).name
         lead = None
-        if nor_msg['entity'] == "general":
+        if nor_msg['entity'] == "general" and nor_msg.get("serviceId") is  None:
             data = BussinessService.findByUserId(ownerData["id"])
+            # print("data",data)
+            
 
             msg = format_list(data, serviceType)
             return f"Reply with number or service name to book.\n {msg}"
-        if nor_msg['entity'] == bussinessName and serviceType == bussinesType.healthcare:
-            
-            item_id = 1  # For simplicity, we are hardcoding the item_id
-            data = get_properties(tenant["tenant_id"])
-            if  nor_msg.get('price') is None:
-                return "💰 Price is required for booking a property"
-            if nor_msg.get("location") is None:
-                return " Location is required for booking a property"
-            if nor_msg.get('price') is not None and nor_msg.get('location') is not None:
-                data = [p for p in get_properties(tenant["tenant_id"]) if p['price'] == nor_msg.get('price') or p['location'].lower() == nor_msg.get('location').lower()]
+        #  suppose user sent just 1 in message and last intent was booking then we will book that service for user
+        
+        if (lastIntent == "search" or lastIntent == "booking") and nor_msg.get("serviceId") is not None:
+            print("Booking with serviceId from last search")
+            data = BussinessService.findById(nor_msg.get("serviceId"))
             if data:
-                item_id = data[0]['id']
-            lead = create_lead(user_number, nor_msg['entity'], item_id, tenant_number=tenant_number, tenant_id=tenant["id"])
-            return f"✅ Booking has been confirmed !\nLead: {lead}"
-        if nor_msg['entity'] == "salon" and tenant["services_provided"] == "salon":
-            data = get_salons(tenant["tenant_id"])
-            item_id = None
-            if not nor_msg.get('price'):
-                return "💰 Price is required for booking a salon"
-
-            if nor_msg.get("service") is None:
-                return "Service type is required for booking a salon"
-            if nor_msg.get('price') is not None and nor_msg.get('service') is not None:
-                data = [s for s in get_salons(tenant["tenant_id"]) if s['price'] == nor_msg.get('price') and s['service'].lower() == nor_msg.get('service').lower()]
-            if data:
-                item_id = data[0]['id']
-          
-            lead = create_lead(user_number, nor_msg['entity'], item_id, tenant_number=tenant_number)
-            return f"✅ Booking has been confirmed !\nLead: {lead}"
-        if nor_msg['entity'] == "event" and tenant["services_provided"] == "event":
-            item_id = None
-            data = get_events(tenant["tenant_id"])
-            if not nor_msg.get('price'):
-                return "💰Price is required for booking an event"
-            if nor_msg.get("location") is None:
-                return "Location is required for booking an event"
-
-            if nor_msg.get('price') is not None and nor_msg.get('location') is not None:
-                data = [e for e in get_events(tenant["tenant_id"]) if e['price'] == nor_msg.get('price') or e['location'].lower() == nor_msg.get('location').lower()]
-            if data:
-                item_id = data[0]['id']
-            lead = create_lead(user_number, nor_msg.get('entity'), item_id, tenant_number=tenant_number)
-
-            return f"✅ Booking has been confirmed !\nLead: {lead}"
-
+                item_id = data['id']
+                lead = create_lead(user_number, agentData["agentWhatsappNumber"],tenant_number=ownerData["phone_number"], tenant_id=ownerData["id"], serviceId=item_id,source="1")
+                if lead is None:
+                    nor_msg['intent'] = "search"
+                    return "Sorry, there was an issue creating your booking. Please try again."
+                return f"✅ Booking has been confirmed !\nLead: {lead}"
+            else:
+                data = BussinessService.findByUserId(ownerData["id"])
+                msg = format_list(data, serviceType)
+                # return f"Reply with number or service name to book.\n {msg}"
+                return f"Service not found for booking. Please try again. with correct number\n {msg}"
+   
+       
+ 
     # 🟢 AVAILABILITY
-        # if nor_msg['intent'] == "availability":
-        #     return "✅ Available hai"
+        if nor_msg['intent'] == "availability":
+            data = BussinessService.findByUserId(ownerData["id"])
+            msg = format_list(data, serviceType)
+            return f"✅ Available hai\n: \n {msg}"
         return "I don't understand 😅"

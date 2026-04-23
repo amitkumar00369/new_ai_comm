@@ -3,6 +3,7 @@ from app.controllers.admin.agents import  getAgentsByUsers,assignAgents
 from app.controllers.user.user_controller import create_user,verifyOtp,editProfile, login,logout,deleteAccount,resentOtp
 from app.controllers.user.tenant_controller import createTenat,getTenatDetails
 from app.controllers.user.data_handle import bussinessData,getServiceData,deleteServiceData
+from app.controllers.user.lead_controller import getLeadData
 userRouter: APIRouter = APIRouter()
 
 # User Auhtentication apis
@@ -28,6 +29,7 @@ userRouter.get("/assignAgent/{id}")(assignAgents)
 userRouter.post("/dataExtact")(bussinessData)
 userRouter.get("/getServiceData")(getServiceData)
 userRouter.delete("/deleteServiceData")(deleteServiceData)
+userRouter.get("/getLeadData")(getLeadData)
 
 
 

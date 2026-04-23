@@ -1,0 +1,92 @@
+[
+  {
+    "title": "Music Concert Night",
+    "price": 1500,
+    "location": "Delhi",
+    "eventType": "Concert",
+    "organizer": "Live Nation",
+    "availableDays": "Saturday",
+    "timing": "6PM-10PM"
+  },
+  {
+    "title": "Startup Networking Meetup",
+    "price": 500,
+    "location": "Noida",
+    "eventType": "Business",
+    "organizer": "Startup India",
+    "availableDays": "Sunday",
+    "timing": "11AM-3PM"
+  },
+  {
+    "title": "Tech Conference 2026",
+    "price": 2000,
+    "location": "Bangalore",
+    "eventType": "Technology",
+    "organizer": "TechWorld",
+    "availableDays": "Mon-Wed",
+    "timing": "9AM-5PM"
+  },
+  {
+    "title": "Art Exhibition",
+    "price": 300,
+    "location": "Delhi",
+    "eventType": "Art",
+    "organizer": "Art Gallery India",
+    "availableDays": "Tue-Sun",
+    "timing": "10AM-6PM"
+  },
+  {
+    "title": "Food Festival",
+    "price": 700,
+    "location": "Mumbai",
+    "eventType": "Food",
+    "organizer": "Foodies Club",
+    "availableDays": "Fri-Sun",
+    "timing": "12PM-10PM"
+  },
+  {
+    "title": "Stand-up Comedy Show",
+    "price": 1200,
+    "location": "Gurgaon",
+    "eventType": "Comedy",
+    "organizer": "Laugh Club",
+    "availableDays": "Saturday",
+    "timing": "7PM-9PM"
+  },
+  {
+    "title": "Fashion Show",
+    "price": 2500,
+    "location": "Delhi",
+    "eventType": "Fashion",
+    "organizer": "Style Hub",
+    "availableDays": "Sunday",
+    "timing": "5PM-9PM"
+  },
+  {
+    "title": "Gaming Tournament",
+    "price": 1000,
+    "location": "Noida",
+    "eventType": "Gaming",
+    "organizer": "Esports India",
+    "availableDays": "Sat-Sun",
+    "timing": "2PM-8PM"
+  },
+  {
+    "title": "Yoga & Wellness Camp",
+    "price": 600,
+    "location": "Rishikesh",
+    "eventType": "Wellness",
+    "organizer": "Yoga Life",
+    "availableDays": "Mon-Fri",
+    "timing": "6AM-10AM"
+  },
+  {
+    "title": "Photography Workshop",
+    "price": 900,
+    "location": "Jaipur",
+    "eventType": "Workshop",
+    "organizer": "Photo Masters",
+    "availableDays": "Weekend",
+    "timing": "10AM-4PM"
+  }
+]

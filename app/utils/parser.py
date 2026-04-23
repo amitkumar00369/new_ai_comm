@@ -3,6 +3,7 @@ from app.utils.enum import entity_keywords, bussinesType
 
 
 def detect_entity(msg: str):
+
     for entity, keywords in entity_keywords.items():
         for word in keywords:
             if re.search(rf"\b{word}\b", msg):
@@ -15,6 +16,14 @@ def parse_message(message: str):
     print("Parsing message:", msg)
 
     # ✅ Intent Detection (cleaned)
+    serviceId = None
+    price = None
+    if msg.isdigit():
+        if len(msg) > 3:  # Assuming service IDs are short numbers
+            price = int(msg)
+        else:
+            serviceId = int(msg)
+     
     if any(word in msg for word in ["book", "appointment"]):
         intent = "booking"
 
@@ -62,7 +71,7 @@ def parse_message(message: str):
             break
 
     #  Price Extract
-    price = None
+    # price = None
     numbers = re.findall(r"\d+(?!\s*bhk)", msg)
     if numbers:
         price = int(numbers[0])
@@ -96,5 +105,6 @@ def parse_message(message: str):
         "location": location,
         "service": service,
         "name": name,
-        "bedrooms": bedrooms
+        "bedrooms": bedrooms,
+        "serviceId": serviceId
     }

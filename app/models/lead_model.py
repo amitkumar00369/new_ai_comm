@@ -14,8 +14,13 @@ class Lead(Base, BaseMixin):
     leadId = Column(String, unique=True, index=True)
     tenantId = Column(String, unique=True, index=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    
+    serviceId = Column(Integer,ForeignKey("services.id"))
     name = Column(String)
-    phone = Column(String, index=True)
+    phone = Column(String)
+    tenant_phone = Column(String)
+    agent_number = Column(String)
     service = Column(String)
     source = Column(Enum(souceType),unique=True)  # "call" / "whatsapp"
     # tenant = relationship("Tenant", back_populates="leads")

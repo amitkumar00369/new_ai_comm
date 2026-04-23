@@ -10,3 +10,4 @@ from .commission import *
 from .payment import *
 from .conversation_model import *
 from .base_models import *
+from .bussinessServiceModel import *

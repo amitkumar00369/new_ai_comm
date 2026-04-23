@@ -1,9 +1,10 @@
 from sqlite3 import IntegrityError, OperationalError
 
 from app.models.bussinessServiceModel import BussinessServiceModel
-from sqlalchemy import desc
+from sqlalchemy import desc, exists
 from sqlalchemy.orm import Session
 
+from app.models.lead_model import Lead
 from app.utils.pagination import PaginationRsponse
 from ..models.user_model import User
 from core.database import SessionLocal
@@ -85,7 +86,8 @@ class bussinessService:
             services = (
             db.query(BussinessServiceModel)
             .filter(BussinessServiceModel.isDeleted == False,
-                    BussinessServiceModel.user_id==userId)
+                    BussinessServiceModel.user_id==userId,
+                     ~exists().where(Lead.serviceId == BussinessServiceModel.id))
             .order_by(desc(BussinessServiceModel.created_at))   #  correct
             .all())
             return jsonable_encoder(services)
