@@ -79,5 +79,26 @@ class RabbitMQClient:
 
         except Exception as e:
             print("❌ RabbitMQ Error:", str(e))
+    @classmethod
+    def publish_call(cls, message_data):
+        try:
+            channel = cls.get_channel()
+
+            if channel.is_closed:
+                print("⚠️ Channel closed, reconnecting...")
+                cls._connection = None
+                channel = cls.get_channel()
+
+            channel.basic_publish(
+                exchange="",
+                routing_key="call_queue",
+                body=json.dumps(message_data),
+                properties=pika.BasicProperties(delivery_mode=2)
+            )
+
+            print("✅ Published:", message_data)
+
+        except Exception as e:
+            print("❌ RabbitMQ Error:", str(e))
         
 RabitMqService = RabbitMQClient()

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str
     AWS_REGION:str
     AWS_BUCKET_NAME: str
+    TWILLIO_CALL_NUMBER: str
         
 
     class Config:

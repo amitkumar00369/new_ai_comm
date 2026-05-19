@@ -27,6 +27,7 @@ from app.api.v1.user.api_routes import userRouter
 from app.api.v1.admin.api_routes import adminRouter
 from app.api.v1.routes_whatsapp import whatsappRouter
 from app.api.v1.stripe_routes import stripeRouter
+from app.api.v1.routes_calls import voiceRouter
 
 
 # Security
@@ -87,6 +88,7 @@ app.add_exception_handler(Exception, global_exception_handler)
 app.include_router(userRouter, prefix="/api/v1/user", tags=["User-API"])
 app.include_router(adminRouter, prefix="/api/v1/admin", tags=["Admin-API"])
 app.include_router(whatsappRouter, prefix="/api/v1/whatsapp", tags=["WhatsApp-API"])
+app.include_router(voiceRouter, prefix="/api/v1/voice", tags=["Voice-API"])
 app.include_router(stripeRouter, prefix="/api/v1/stripe", tags=["Stripe-API"])
 app.include_router(uploadRouter)
 
